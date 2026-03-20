@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload File</title>
+</head>
+
+<body>
+
+<h2>Upload File</h2>
+
+<form id="uploadForm">
+  <input type="file" id="file" required>
+  <button type="submit">Upload</button>
+</form>
+
+<br>
+<a href="dashboard.html">Go to Dashboard</a>
+
+<script>
+
+document.getElementById("uploadForm").addEventListener("submit", async (e) => {
+  e.preventDefault()
+
+  const fileInput = document.getElementById("file")
+  const file = fileInput.files[0]
+
+  const formData = new FormData()
+  formData.append("file", file)
+
+  const token = localStorage.getItem("token")
+
+  await fetch("http://localhost:5000/files", {
+    method: "POST",
+    headers: {
+      Authorization: token   // 🔥 IMPORTANT
+    },
+    body: formData
+  })
+
+  alert("File Uploaded ✅")
+  window.location.href = "dashboard.html"
+})
+
+</script>
+
+</body>
+</html>

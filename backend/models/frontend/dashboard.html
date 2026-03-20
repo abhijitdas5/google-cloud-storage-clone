@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f4f4f4;
+    }
+
+    .file-box {
+      background: white;
+      padding: 10px;
+      margin: 10px auto;
+      width: 60%;
+      border-radius: 5px;
+      box-shadow: 0 0 5px gray;
+    }
+
+    button {
+      margin: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    input {
+      padding: 8px;
+      width: 40%;
+      margin: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- 🔐 LOGIN CHECK -->
+<script>
+const token = localStorage.getItem("token")
+
+if (!token) {
+  alert("Login first ❌")
+  window.location.href = "login.html"
+}
+</script>
+
+<h1>📁 Dashboard</h1>
+
+<a href="upload.html">Upload File</a>
+
+<br><br>
+
+<!-- 🔍 SEARCH -->
+<input type="text" id="search" placeholder="Search file..." onkeyup="searchFile()">
+
+<!-- 📂 FILE LIST -->
+<div id="fileList"></div>
+
+<br>
+
+<!-- 🔓 LOGOUT -->
+<button onclick="logout()">Logout</button>
+
+<script>
+
+let allFiles = []
+
+// 🔓 LOGOUT
+function logout() {
+  localStorage.removeItem("token")
+  alert("Logged out ✅")
+  window.location.href = "login.html"
+}
+
+// 📂 LOAD FILES (user-wise)
+async function loadFiles() {
+
+  const token = localStorage.getItem("token")
+
+  const res = await fetch("http://localhost:5000/files", {
+    headers: {
+      Authorization: token   // 🔥 VERY IMPORTANT
+    }
+  })
+
+  const files = await res.json()
+
+  allFiles = files
+  showFiles(files)
+}
+
+// 📂 SHOW FILES
+function showFiles(files) {
+
+  const list = document.getElementById("fileList")
+  list.innerHTML = ""
+
+  files.forEach(file => {
+
+    const div = document.createElement("div")
+    div.className = "file-box"
+
+    div.innerHTML = `
+      <p>${file.name}</p>
+
+      <a href="http://localhost:5000/uploads/${file.name}" download>
+        Download
+      </a>
+
+      <button onclick="deleteFile('${file._id}')">Delete</button>
+    `
+
+    list.appendChild(div)
+  })
+}
+
+// 🗑 DELETE FILE
+async function deleteFile(id) {
+
+  await fetch("http://localhost:5000/files/" + id, {
+    method: "DELETE"
+  })
+
+  alert("File Deleted ❌")
+  loadFiles()
+}
+
+// 🔍 SEARCH
+function searchFile() {
+
+  const value = document.getElementById("search").value.toLowerCase()
+
+  const filtered = allFiles.filter(file =>
+    file.name.toLowerCase().includes(value)
+  )
+
+  showFiles(filtered)
+}
+
+// 🚀 PAGE LOAD
+loadFiles()
+
+</script>
+
+</body>
+</html>
