@@ -21,7 +21,7 @@ async function loadFiles() {
 
     const res = await fetch("https://google-cloud-storage-clone.onrender.com/files", {
         headers: {
-            Authorization: token
+            Authorization: "Bearer " + token
         }
     })
 
