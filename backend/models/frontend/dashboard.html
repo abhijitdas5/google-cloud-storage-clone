@@ -1,7 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard</title>
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+    }
+    input {
+      padding: 8px;
+    }
+    button {
+      padding: 8px;
+      margin-left: 5px;
+    }
+    .file {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+    }
+  </style>
 </head>
 
 <body>
@@ -10,113 +28,108 @@
 
 <input type="text" id="search" placeholder="Search file..." />
 <button onclick="searchFile()">Search</button>
+<button onclick="logout()">Logout</button>
+
+<hr>
 
 <div id="files"></div>
 
 <script>
+const BASE_URL = "https://google-cloud-storage-clone.onrender.com"
 
-// 🔥 CHECK LOGIN
-const token = localStorage.getItem("token")
-
-if (!token) {
-    alert("Please login first")
-    window.location.href = "/login.html"
-}
-
-// 🔥 LOAD FILES
+// 🔥 Load all files
 async function loadFiles() {
-    try {
-        const res = await fetch("https://google-cloud-storage-clone.onrender.com/files", {
-            headers: {
-                Authorization: "Bearer " + token
-            }
-        })
+  const token = localStorage.getItem("token")
 
-        // ❌ server error handle
-        if (!res.ok) {
-            const text = await res.text()
-            console.log("SERVER ERROR:", text)
-            alert("Backend error — check console")
-            return
-        }
+  if (!token) {
+    alert("Login first")
+    window.location.href = "/login.html"
+    return
+  }
 
-        const files = await res.json()
-        showFiles(files)
-
-    } catch (err) {
-        console.log("FETCH ERROR:", err)
-        alert("Network error")
-    }
-}
-
-
-// 🔥 SHOW FILES
-function showFiles(files) {
-    const fileList = document.getElementById("files")
-    fileList.innerHTML = ""
-
-    if (files.length === 0) {
-        fileList.innerHTML = "<p>No files uploaded</p>"
-        return
-    }
-
-    files.forEach(file => {
-        fileList.innerHTML += `
-            <p>
-                ${file.filename}
-                <button onclick="deleteFile('${file._id}')">Delete</button>
-            </p>
-        `
+  try {
+    const res = await fetch(BASE_URL + "/files", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
     })
+
+    const data = await res.json()
+    showFiles(data)
+
+  } catch (err) {
+    alert("Error loading files")
+  }
 }
 
-
-// 🔥 DELETE FILE
-async function deleteFile(id) {
-    try {
-        await fetch(`https://google-cloud-storage-clone.onrender.com/files/${id}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: "Bearer " + token
-            }
-        })
-
-        loadFiles()
-
-    } catch (err) {
-        console.log(err)
-    }
-}
-
-
-// 🔥 SEARCH FILE
+// 🔥 Search file
 async function searchFile() {
-    const value = document.getElementById("search").value
+  const value = document.getElementById("search").value
+  const token = localStorage.getItem("token")
 
-    try {
-        const res = await fetch(`https://google-cloud-storage-clone.onrender.com/files/search?q=${value}`, {
-            headers: {
-                Authorization: "Bearer " + token
-            }
-        })
+  try {
+    const res = await fetch(BASE_URL + "/files/search?q=" + value, {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    })
 
-        if (!res.ok) {
-            alert("Search error")
-            return
-        }
+    const data = await res.json()
+    showFiles(data)
 
-        const files = await res.json()
-        showFiles(files)
-
-    } catch (err) {
-        console.log(err)
-    }
+  } catch (err) {
+    alert("Search error")
+  }
 }
 
+// 🔥 Show files
+function showFiles(files) {
+  const container = document.getElementById("files")
+  container.innerHTML = ""
+
+  if (!files || files.length === 0) {
+    container.innerHTML = "<p>No files found</p>"
+    return
+  }
+
+  files.forEach(file => {
+    const div = document.createElement("div")
+    div.className = "file"
+
+    div.innerHTML = `
+      <b>${file.filename || "No name"}</b><br>
+      <a href="${BASE_URL}/${file.path}" target="_blank">Download</a>
+      <br><br>
+      <button onclick="deleteFile('${file._id}')">Delete</button>
+    `
+
+    container.appendChild(div)
+  })
+}
+
+// 🔥 Delete file
+async function deleteFile(id) {
+  const token = localStorage.getItem("token")
+
+  await fetch(BASE_URL + "/files/" + id, {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+
+  alert("Deleted")
+  loadFiles()
+}
+
+// 🔥 Logout
+function logout() {
+  localStorage.removeItem("token")
+  window.location.href = "/login.html"
+}
 
 // INIT
 loadFiles()
-
 </script>
 
 </body>
