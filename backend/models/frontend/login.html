@@ -1,32 +1,20 @@
-<form id="loginForm">
-  <input type="email" id="email" placeholder="Email" required />
-  <input type="password" id="password" placeholder="Password" required />
-  <button type="submit">Login</button>
-</form>
+async function login() {
+    const email = document.getElementById("email").value
+    const password = document.getElementById("password").value
 
-<script>
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault()
+    const res = await fetch("https://google-cloud-storage-clone.onrender.com/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+    })
 
-  const email = document.getElementById("email").value
-  const password = document.getElementById("password").value
+    const data = await res.json()
 
-  const res = await fetch("http://localhost:5000/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ email, password })
-  })
-
-  const data = await res.json()
-
-  if (data.token) {
+    // 🔥 IMPORTANT
     localStorage.setItem("token", data.token)
-    alert("Login success ✅")
-    window.location.href = "dashboard.html"
-  } else {
-    alert(data.message)
-  }
-})
-</script>
+
+    // redirect
+    window.location.href = "/dashboard.html"
+}
